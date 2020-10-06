@@ -2,8 +2,9 @@ package th.ac.ku.bankaccount.controller;
 
 import org.springframework.web.bind.annotation.*;
 import th.ac.ku.bankaccount.data.BankAccountRepository;
+import th.ac.ku.bankaccount.data.TransactionRepository;
 import th.ac.ku.bankaccount.model.BankAccount;
-
+import th.ac.ku.bankaccount.model.Transaction;
 import java.util.List;
 
 @RestController
@@ -11,9 +12,11 @@ import java.util.List;
 public class BankAccountRestController {
 
     private BankAccountRepository repository;
+    private TransactionRepository transactionRepository;
 
-    public BankAccountRestController(BankAccountRepository repository) {
+    public BankAccountRestController(BankAccountRepository repository, TransactionRepository transactionRepository) {
         this.repository = repository;
+        this.transactionRepository = transactionRepository;
     }
 
     @GetMapping
@@ -52,5 +55,15 @@ public class BankAccountRestController {
         return record;
     }
 
-
+    @PostMapping("/transaction")
+    public BankAccount makeTransaction(@RequestBody Transaction transaction) {
+        BankAccount bankAccount = repository.findById(transaction.getBankAccountId()).get();
+        if (transaction.getTransactionType().equals("Withdraw")) {
+            bankAccount.setBalance(bankAccount.getBalance() - transaction.getAmount());
+        } else if (transaction.getTransactionType().equals("Deposit")) {
+            bankAccount.setBalance(bankAccount.getBalance() + transaction.getAmount());
+        }
+        repository.save(bankAccount);
+        return bankAccount;
+    }
 }
